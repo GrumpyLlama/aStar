@@ -1,4 +1,3 @@
-import collections
 from PIL import Image
 from scipy import misc
 import numpy as np
@@ -35,31 +34,21 @@ for x in range(im_width):
             checker = x,y
             walls.append(checker)
 
-class Queue:
-    def __init__(self):
-        self.elements = collections.deque()
-    
-    def empty(self):
-        return len(self.elements) == 0
-    
-    def put(self, x):
-        self.elements.append(x)
-    
-    def get(self):
-        return self.elements.popleft()
-
-def draw_path(graph, id, style):
+##Draws in the solution path
+def draw_path(maze, id, style):
     r = '1'
     if 'path' in style and id in style['path']: r = '2'
-    if id in graph.walls: r = '0'
+    if id in maze.walls: r = '0'
     return r
 
-def draw_solution(graph, width=2, **style):
-    for x in range(graph.width):
-        for y in range(graph.height):
-            map[x,y] = ((draw_path(graph, (x, y), style)))
-        
-class SquareGrid:
+##Stores the solved maze in array map
+def draw_solution(maze, width=2, **style):
+    for x in range(maze.width):
+        for y in range(maze.height):
+            map[x,y] = ((draw_path(maze, (x, y), style)))
+
+##Checks cells for validity
+class cell_checker:
     def __init__(self, width, height):
         self.width = width
         self.height = height
@@ -80,7 +69,8 @@ class SquareGrid:
         results = filter(self.passable, results)
         return results
 
-class GridWithWeights(SquareGrid):
+##Assigns weights to each cell within the maze
+class maze_weights(cell_checker):
     def __init__(self, width, height):
         super().__init__(width, height)
         self.weights = {}
@@ -88,10 +78,10 @@ class GridWithWeights(SquareGrid):
     def cost(self, from_node, to_node):
         return self.weights.get(to_node, 1)
 
-maze = GridWithWeights(im_width, im_height)
+maze = maze_weights(im_width, im_height)
 maze.walls = walls
 
-class PriorityQueue:
+class priority_list:
     def __init__(self):
         self.elements = []
     
@@ -118,8 +108,8 @@ def heuristic(a, b):
     return abs(x1 - x2) + abs(y1 - y2)
 
 ##A* pathfinding function
-def a_star_search(graph, start, goal):
-    maze_area = PriorityQueue() ##Sets the variable frontier to the returned value of PriorityQueue
+def a_star_search(maze, start, goal):
+    maze_area = priority_list() ##Sets the variable frontier to the returned value of priority_list
     maze_area.put(start, 0)
     visited = {} ##Initiates the variable came_from
     cost_so_far = {} ##Initiates the variable cost_so_far
@@ -132,8 +122,8 @@ def a_star_search(graph, start, goal):
         if current == goal: ##Checks if the current cell is equal to the goal cell and stops search if it is
             break
         
-        for next in graph.neighbors(current): ##For the next neighbour to the current cell
-            new_cost = cost_so_far[current] + graph.cost(current, next) ##Initiates and sets the variable new_cost as the current cost added to the running cost
+        for next in maze.neighbors(current): ##For the next neighbour to the current cell
+            new_cost = cost_so_far[current] + maze.cost(current, next) ##Initiates and sets the variable new_cost as the current cost added to the running cost
             if next not in cost_so_far or new_cost < cost_so_far[next]: ##If the next neighbour isn't in the running costs or the new cost is less than the new total cost
                 cost_so_far[next] = new_cost ##Updates the cost so far
                 priority = new_cost + heuristic(goal, next) ##Sets the priority for next move
@@ -173,11 +163,6 @@ for x in range(im_width):
             solution_out.append((255,0,0))
         else:
             solution_out.append((255,255,255))
-
-##for x in range(im_width):
-##        for y in range(im_height):
-##                if map[x,y] == 2:
-##                        im_data[x,y] = (255,0,0)
 
 ##Creates solution image and saves to solution folder
 image_out = Image.new('RGB', (im_width, im_height))
