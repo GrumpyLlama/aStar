@@ -24,7 +24,7 @@ for x in range(im_width):
                 map[x,y] = 1
 
 ##Initiating the list walls
-walls = list()
+walls = set()
 
 ##Adding all walls to the list of walls
 for x in range(im_width):
@@ -32,7 +32,7 @@ for x in range(im_width):
         if map[x,y] == 0:
             checker = np.empty(shape=[1,2])
             checker = x,y
-            walls.append(checker)
+            walls.add(checker)
 
 ##Draws in the solution path
 def draw_path(maze, id, style):
